@@ -20,13 +20,13 @@ VOICE = os.getenv("VOICE", "alloy")  # OpenAI voice name
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 
 # ---------- FastAPI ----------
-app = FastAPI(title="Twilio ג†” OpenAI Realtime Bridge")
+app = FastAPI(title="Twilio ׳’ג€ ג€ OpenAI Realtime Bridge")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    return "<h1>Twilio ג†” OpenAI Realtime</h1><p>POST /twilio/voice ג€” WebSocket /twilio/media ג€” GET /health</p>"
+    return "<h1>Twilio ׳’ג€ ג€ OpenAI Realtime</h1><p>POST /twilio/voice ׳’ג‚¬ג€ WebSocket /twilio/media ׳’ג‚¬ג€ GET /health</p>"
 
 
 @app.get("/health")
@@ -36,18 +36,18 @@ def health():
 
 def _compute_media_ws(request: Request) -> str:
     """
-    ׳‘׳•׳ ׳” ׳׳× ׳›׳×׳•׳‘׳× ׳”ײ¾wss ׳ײ¾/twilio/media.
-    ׳׳ ׳”׳•׳’׳“׳¨ PUBLIC_BASE_URL ג€“ ׳ ׳©׳×׳׳© ׳‘׳•; ׳׳—׳¨׳× ׳ ׳‘׳ ׳” ׳׳”ײ¾headers ׳©׳ Cloud Run.
+    ׳³ג€˜׳³ג€¢׳³ֲ ׳³ג€ ׳³ֲ׳³ֳ— ׳³ג€÷׳³ֳ—׳³ג€¢׳³ג€˜׳³ֳ— ׳³ג€׳²ֲ¾wss ׳³ֲ׳²ֲ¾/twilio/media.
+    ׳³ֲ׳³ֲ ׳³ג€׳³ג€¢׳³ג€™׳³ג€׳³ֲ¨ PUBLIC_BASE_URL ׳’ג‚¬ג€ ׳³ֲ ׳³ֲ©׳³ֳ—׳³ֲ׳³ֲ© ׳³ג€˜׳³ג€¢; ׳³ֲ׳³ג€”׳³ֲ¨׳³ֳ— ׳³ֲ ׳³ג€˜׳³ֲ ׳³ג€ ׳³ֲ׳³ג€׳²ֲ¾headers ׳³ֲ©׳³ֲ Cloud Run.
     """
     if PUBLIC_BASE_URL:
         base = PUBLIC_BASE_URL
     else:
-        # Cloud Run ׳׳¢׳‘׳™׳¨ x-forwarded-host + x-forwarded-proto
+        # Cloud Run ׳³ֲ׳³ֲ¢׳³ג€˜׳³ג„¢׳³ֲ¨ x-forwarded-host + x-forwarded-proto
         host = request.headers.get("x-forwarded-host") or request.url.netloc or request.url.hostname
         scheme = request.headers.get("x-forwarded-proto", "https")
         base = f"{scheme}://{host}"
 
-    # ׳”׳׳¨׳” ׳ײ¾wss
+    # ׳³ג€׳³ֲ׳³ֲ¨׳³ג€ ׳³ֲ׳²ֲ¾wss
     return base.replace("http://", "wss://").replace("https://", "wss://") + "/twilio/media"
 
 
@@ -59,13 +59,13 @@ async def twilio_voice(
     To: str = Form(...),
 ):
     """
-    ׳ ׳§׳•׳“׳× Twilio Voice Webhook ג€” ׳׳—׳–׳™׳¨׳” TwiML ׳©׳׳—׳‘׳¨ ׳׳× ׳”׳©׳™׳—׳” ׳ײ¾WebSocket ׳©׳׳ ׳•.
-    ׳׳©׳×׳׳©׳™׳ ׳‘-<Connect><Stream> (׳×׳§׳ ׳™ ׳-Media Streams).
+    ׳³ֲ ׳³ֲ§׳³ג€¢׳³ג€׳³ֳ— Twilio Voice Webhook ׳’ג‚¬ג€ ׳³ֲ׳³ג€”׳³ג€“׳³ג„¢׳³ֲ¨׳³ג€ TwiML ׳³ֲ©׳³ֲ׳³ג€”׳³ג€˜׳³ֲ¨ ׳³ֲ׳³ֳ— ׳³ג€׳³ֲ©׳³ג„¢׳³ג€”׳³ג€ ׳³ֲ׳²ֲ¾WebSocket ׳³ֲ©׳³ֲ׳³ֲ ׳³ג€¢.
+    ׳³ֲ׳³ֲ©׳³ֳ—׳³ֲ׳³ֲ©׳³ג„¢׳³ֲ ׳³ג€˜-<Connect><Stream> (׳³ֳ—׳³ֲ§׳³ֲ ׳³ג„¢ ׳³ֲ-Media Streams).
     """
     media_ws_url = _compute_media_ws(request)
-    logger.info(f"[TwiML] Incoming call From={From} To={To} CallSid={CallSid} ג†’ Stream={media_ws_url}")
+    logger.info(f"[TwiML] Incoming call From={From} To={To} CallSid={CallSid} ׳’ג€ ג€™ Stream={media_ws_url}")
 
-    # ׳©׳™׳׳•׳© ׳‘-voice="alice" ׳›׳“׳™ ׳׳”׳™׳׳ ׳¢ ׳׳©׳’׳™׳׳•׳× ׳׳™׳׳•׳× ׳§׳•׳. (Polly.* ׳׳ ׳×׳׳™׳“ ׳–׳׳™׳ ׳›׳‘׳¨׳™׳¨׳× ׳׳—׳“׳)
+    # ׳³ֲ©׳³ג„¢׳³ֲ׳³ג€¢׳³ֲ© ׳³ג€˜-voice="alice" ׳³ג€÷׳³ג€׳³ג„¢ ׳³ֲ׳³ג€׳³ג„¢׳³ֲ׳³ֲ ׳³ֲ¢ ׳³ֲ׳³ֲ©׳³ג€™׳³ג„¢׳³ֲ׳³ג€¢׳³ֳ— ׳³ֲ׳³ג„¢׳³ֲ׳³ג€¢׳³ֳ— ׳³ֲ§׳³ג€¢׳³ֲ. (Polly.* ׳³ֲ׳³ֲ ׳³ֳ—׳³ֲ׳³ג„¢׳³ג€ ׳³ג€“׳³ֲ׳³ג„¢׳³ֲ ׳³ג€÷׳³ג€˜׳³ֲ¨׳³ג„¢׳³ֲ¨׳³ֳ— ׳³ֲ׳³ג€”׳³ג€׳³ֲ)
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say voice="alice">You are now connected to the A I assistant.</Say>
@@ -83,7 +83,7 @@ async def openai_realtime_connect():
     if not OPENAI_API_KEY:
         raise RuntimeError("OPENAI_API_KEY is not set")
 
-    # ׳׳׳₪׳©׳¨ override ׳-base URL (׳׳׳©׳ ׳“׳¨׳ ׳₪׳¨׳•׳§׳¡׳™/׳׳–׳•׳¨)
+    # ׳³ֲ׳³ֲ׳³ג‚×׳³ֲ©׳³ֲ¨ override ׳³ֲ-base URL (׳³ֲ׳³ֲ׳³ֲ©׳³ֲ ׳³ג€׳³ֲ¨׳³ֲ ׳³ג‚×׳³ֲ¨׳³ג€¢׳³ֲ§׳³ֲ¡׳³ג„¢/׳³ֲ׳³ג€“׳³ג€¢׳³ֲ¨)
     base_url = os.getenv("OPENAI_BASE_URL", "wss://api.openai.com")
     uri = f"{base_url}/v1/realtime?model={urllib.parse.quote_plus(REALTIME_MODEL)}"
     headers = [
@@ -92,7 +92,7 @@ async def openai_realtime_connect():
     ]
 
     ws = None
-    # ׳¨׳™׳˜׳¨׳™׳™ ׳§׳¦׳¨ ׳›׳“׳™ ׳׳ ׳׳”׳₪׳™׳ ׳׳× ׳©׳™׳—׳× ׳˜׳•׳•׳™׳׳™׳• ׳¢׳ ׳›׳©׳ ׳¨׳’׳¢׳™
+    # ׳³ֲ¨׳³ג„¢׳³ֻ׳³ֲ¨׳³ג„¢׳³ג„¢ ׳³ֲ§׳³ֲ¦׳³ֲ¨ ׳³ג€÷׳³ג€׳³ג„¢ ׳³ֲ׳³ֲ ׳³ֲ׳³ג€׳³ג‚×׳³ג„¢׳³ֲ ׳³ֲ׳³ֳ— ׳³ֲ©׳³ג„¢׳³ג€”׳³ֳ— ׳³ֻ׳³ג€¢׳³ג€¢׳³ג„¢׳³ֲ׳³ג„¢׳³ג€¢ ׳³ֲ¢׳³ֲ ׳³ג€÷׳³ֲ©׳³ֲ ׳³ֲ¨׳³ג€™׳³ֲ¢׳³ג„¢
     for _attempt in range(3):
         try:
             ws = await websockets.connect(
@@ -115,7 +115,7 @@ async def openai_realtime_connect():
     if ws is None:
         raise RuntimeError("Upstream connect failed")
 
-    # ׳×׳¦׳•׳¨׳× ׳¡׳©׳: ׳§׳•׳, ׳׳•׳“׳, VAD ׳‘׳¦׳“ ׳”׳©׳¨׳×, ׳₪׳•׳¨׳׳˜׳™׳ ׳©׳ ׳׳•׳“׳™׳•
+    # ׳³ֳ—׳³ֲ¦׳³ג€¢׳³ֲ¨׳³ֳ— ׳³ֲ¡׳³ֲ©׳³ֲ: ׳³ֲ§׳³ג€¢׳³ֲ, ׳³ֲ׳³ג€¢׳³ג€׳³ֲ, VAD ׳³ג€˜׳³ֲ¦׳³ג€ ׳³ג€׳³ֲ©׳³ֲ¨׳³ֳ—, ׳³ג‚×׳³ג€¢׳³ֲ¨׳³ֲ׳³ֻ׳³ג„¢׳³ֲ ׳³ֲ©׳³ֲ ׳³ֲ׳³ג€¢׳³ג€׳³ג„¢׳³ג€¢
     session_update = {
         "type": "session.update",
         "session": {
@@ -133,7 +133,7 @@ async def openai_realtime_connect():
     }
     await ws.send(json.dumps(session_update))
 
-    # ׳‘׳¨׳›׳× ׳₪׳×׳™׳—׳” ׳›׳“׳™ ׳©׳׳ ׳™׳”׳™׳” ׳©׳§׳˜ ׳‘׳”׳×׳—׳׳”
+    # ׳³ג€˜׳³ֲ¨׳³ג€÷׳³ֳ— ׳³ג‚×׳³ֳ—׳³ג„¢׳³ג€”׳³ג€ ׳³ג€÷׳³ג€׳³ג„¢ ׳³ֲ©׳³ֲ׳³ֲ ׳³ג„¢׳³ג€׳³ג„¢׳³ג€ ׳³ֲ©׳³ֲ§׳³ֻ ׳³ג€˜׳³ג€׳³ֳ—׳³ג€”׳³ֲ׳³ג€
     initial_say = {
         "type": "response.create",
         "response": {
@@ -148,11 +148,11 @@ async def openai_realtime_connect():
 @app.websocket("/twilio/media")
 async def twilio_media(ws: WebSocket):
     """
-    Twilio ׳™׳“׳‘׳¨ ׳׳™׳×׳ ׳• ׳›׳׳ ׳‘-WebSocket ׳¢׳ subprotocol=audio.
-    ׳׳ ׳—׳ ׳• ׳׳׳–׳™׳ ׳™׳ ׳-events ׳©׳ Twilio (start/media/stop),
-    ׳׳–׳™׳ ׳™׳ ׳׳× ׳”-PCM16 ׳-OpenAI, ׳•׳§׳•׳׳˜׳™׳ ׳—׳–׳¨׳” ׳׳•׳“׳™׳• ׳׳”׳׳•׳“׳ ׳•׳©׳•׳׳—׳™׳ ׳׳˜׳•׳•׳׳™׳• ׳›-ulaw frames.
+    Twilio ׳³ג„¢׳³ג€׳³ג€˜׳³ֲ¨ ׳³ֲ׳³ג„¢׳³ֳ—׳³ֲ ׳³ג€¢ ׳³ג€÷׳³ֲ׳³ֲ ׳³ג€˜-WebSocket ׳³ֲ¢׳³ֲ subprotocol=audio.
+    ׳³ֲ׳³ֲ ׳³ג€”׳³ֲ ׳³ג€¢ ׳³ֲ׳³ֲ׳³ג€“׳³ג„¢׳³ֲ ׳³ג„¢׳³ֲ ׳³ֲ-events ׳³ֲ©׳³ֲ Twilio (start/media/stop),
+    ׳³ֲ׳³ג€“׳³ג„¢׳³ֲ ׳³ג„¢׳³ֲ ׳³ֲ׳³ֳ— ׳³ג€-PCM16 ׳³ֲ-OpenAI, ׳³ג€¢׳³ֲ§׳³ג€¢׳³ֲ׳³ֻ׳³ג„¢׳³ֲ ׳³ג€”׳³ג€“׳³ֲ¨׳³ג€ ׳³ֲ׳³ג€¢׳³ג€׳³ג„¢׳³ג€¢ ׳³ֲ׳³ג€׳³ֲ׳³ג€¢׳³ג€׳³ֲ ׳³ג€¢׳³ֲ©׳³ג€¢׳³ֲ׳³ג€”׳³ג„¢׳³ֲ ׳³ֲ׳³ֻ׳³ג€¢׳³ג€¢׳³ֲ׳³ג„¢׳³ג€¢ ׳³ג€÷-ulaw frames.
     """
-    # ׳§׳‘׳ ׳׳× ׳”-subprotocol ׳©׳˜׳•׳•׳׳™׳• ׳׳¦׳™׳¢ (׳‘׳“"׳› "audio")
+    # ׳³ֲ§׳³ג€˜׳³ֲ ׳³ֲ׳³ֳ— ׳³ג€-subprotocol ׳³ֲ©׳³ֻ׳³ג€¢׳³ג€¢׳³ֲ׳³ג„¢׳³ג€¢ ׳³ֲ׳³ֲ¦׳³ג„¢׳³ֲ¢ (׳³ג€˜׳³ג€"׳³ג€÷ "audio")
     proto_hdr = ws.headers.get("sec-websocket-protocol")
     chosen_sub = "audio"
     if proto_hdr:
@@ -174,20 +174,20 @@ async def twilio_media(ws: WebSocket):
 
     async def pump_openai_to_twilio():
         """
-        ׳§׳•׳¨׳ ׳”׳•׳“׳¢׳•׳× ׳׳”-OpenAI Realtime.
-        ׳›׳©׳׳’׳™׳¢׳™׳ audio delta-׳™׳ (PCM16/16k), ׳׳׳™׳¨ ׳-PCM16/8k ג†’ ־¼-law ׳•׳©׳•׳׳— ׳‘׳¨׳¦׳•׳¢׳•׳× ׳©׳ 20ms (160B ־¼-law).
+        ׳³ֲ§׳³ג€¢׳³ֲ¨׳³ֲ ׳³ג€׳³ג€¢׳³ג€׳³ֲ¢׳³ג€¢׳³ֳ— ׳³ֲ׳³ג€-OpenAI Realtime.
+        ׳³ג€÷׳³ֲ©׳³ֲ׳³ג€™׳³ג„¢׳³ֲ¢׳³ג„¢׳³ֲ audio delta-׳³ג„¢׳³ֲ (PCM16/16k), ׳³ֲ׳³ֲ׳³ג„¢׳³ֲ¨ ׳³ֲ-PCM16/8k ׳’ג€ ג€™ ײ¾ֲ¼-law ׳³ג€¢׳³ֲ©׳³ג€¢׳³ֲ׳³ג€” ׳³ג€˜׳³ֲ¨׳³ֲ¦׳³ג€¢׳³ֲ¢׳³ג€¢׳³ֳ— ׳³ֲ©׳³ֲ 20ms (160B ײ¾ֲ¼-law).
         """
-        nonlocal audio_out_buffer, stream_sid
+        nonlocal audio_out_buffer, stream_sid, stream_sid
         try:
             async for message in oa_ws:
-                # ׳׳ ׳–׳” bytes - ׳׳¨׳•׳‘ ׳–׳” ׳׳ ׳₪׳¨׳™׳™׳׳™ ׳׳•׳“׳™׳• ׳‘׳₪׳•׳¨׳׳˜ ׳©׳׳ ׳—׳ ׳• ׳׳¦׳₪׳™׳, ׳ ׳“׳׳’ ׳‘׳‘׳˜׳—׳”
+                # ׳³ֲ׳³ֲ ׳³ג€“׳³ג€ bytes - ׳³ֲ׳³ֲ¨׳³ג€¢׳³ג€˜ ׳³ג€“׳³ג€ ׳³ֲ׳³ֲ ׳³ג‚×׳³ֲ¨׳³ג„¢׳³ג„¢׳³ֲ׳³ג„¢ ׳³ֲ׳³ג€¢׳³ג€׳³ג„¢׳³ג€¢ ׳³ג€˜׳³ג‚×׳³ג€¢׳³ֲ¨׳³ֲ׳³ֻ ׳³ֲ©׳³ֲ׳³ֲ ׳³ג€”׳³ֲ ׳³ג€¢ ׳³ֲ׳³ֲ¦׳³ג‚×׳³ג„¢׳³ֲ, ׳³ֲ ׳³ג€׳³ֲ׳³ג€™ ׳³ג€˜׳³ג€˜׳³ֻ׳³ג€”׳³ג€
                 if isinstance(message, (bytes, bytearray)):
                     continue
 
                 evt = json.loads(message)
                 etype = evt.get("type")
 
-                # ׳ ׳×׳׳•׳ ׳‘׳›׳׳” ׳©׳׳•׳× ׳׳₪׳©׳¨׳™׳™׳ ׳׳“׳׳×׳ ׳©׳ ׳׳•׳“׳™׳• (׳©׳™׳ ׳•׳™׳™׳ ׳‘׳’׳¨׳¡׳׳•׳× API)
+                # ׳³ֲ ׳³ֳ—׳³ֲ׳³ג€¢׳³ֲ ׳³ג€˜׳³ג€÷׳³ֲ׳³ג€ ׳³ֲ©׳³ֲ׳³ג€¢׳³ֳ— ׳³ֲ׳³ג‚×׳³ֲ©׳³ֲ¨׳³ג„¢׳³ג„¢׳³ֲ ׳³ֲ׳³ג€׳³ֲ׳³ֳ—׳³ֲ ׳³ֲ©׳³ֲ ׳³ֲ׳³ג€¢׳³ג€׳³ג„¢׳³ג€¢ (׳³ֲ©׳³ג„¢׳³ֲ ׳³ג€¢׳³ג„¢׳³ג„¢׳³ֲ ׳³ג€˜׳³ג€™׳³ֲ¨׳³ֲ¡׳³ֲ׳³ג€¢׳³ֳ— API)
                 is_audio_delta = etype in (
                     "response.audio.delta",
                     "output_audio.delta",
@@ -195,36 +195,36 @@ async def twilio_media(ws: WebSocket):
                 )
 
                 if is_audio_delta:
-                    # ׳—׳׳§ ׳׳”׳¡׳§׳™׳׳•׳× ׳׳©׳×׳׳©׳•׳× "audio", ׳׳—׳¨׳•׳× "delta" (׳ ׳›׳¡׳” ׳׳× ׳©׳ ׳™ ׳”׳׳§׳¨׳™׳)
+                    # ׳³ג€”׳³ֲ׳³ֲ§ ׳³ֲ׳³ג€׳³ֲ¡׳³ֲ§׳³ג„¢׳³ֲ׳³ג€¢׳³ֳ— ׳³ֲ׳³ֲ©׳³ֳ—׳³ֲ׳³ֲ©׳³ג€¢׳³ֳ— "audio", ׳³ֲ׳³ג€”׳³ֲ¨׳³ג€¢׳³ֳ— "delta" (׳³ֲ ׳³ג€÷׳³ֲ¡׳³ג€ ׳³ֲ׳³ֳ— ׳³ֲ©׳³ֲ ׳³ג„¢ ׳³ג€׳³ֲ׳³ֲ§׳³ֲ¨׳³ג„¢׳³ֲ)
                     b64 = evt.get("audio") or evt.get("delta") or ""
                     if not b64:
                         continue
 
-                    # PCM16 @ 16kHz ׳׳”׳׳•׳“׳
+                    # PCM16 @ 16kHz ׳³ֲ׳³ג€׳³ֲ׳³ג€¢׳³ג€׳³ֲ
                     pcm16_16k = base64.b64decode(b64)
                     audio_out_buffer.extend(pcm16_16k)
 
-                    # ׳ ׳¨׳•׳§׳ ׳׳׳§׳˜׳¢׳™׳: ׳ ׳‘׳¦׳¢ downsample ׳-8k ׳•׳ ׳׳™׳¨ ׳-־¼-law
+                    # ׳³ֲ ׳³ֲ¨׳³ג€¢׳³ֲ§׳³ֲ ׳³ֲ׳³ֲ׳³ֲ§׳³ֻ׳³ֲ¢׳³ג„¢׳³ֲ: ׳³ֲ ׳³ג€˜׳³ֲ¦׳³ֲ¢ downsample ׳³ֲ-8k ׳³ג€¢׳³ֲ ׳³ֲ׳³ג„¢׳³ֲ¨ ׳³ֲ-ײ¾ֲ¼-law
                     pcm16_8k = resample_linear16(bytes(audio_out_buffer), 16000, 8000)
                     ulaw = linear16_to_ulaw(pcm16_8k)
 
-                    # Twilio ׳׳¦׳₪׳” frames ׳©׳ 20ms: 160 ׳‘׳×׳™׳ ־¼-law ׳‘׳›׳ ׳©׳׳™׳—׳”
+                    # Twilio ׳³ֲ׳³ֲ¦׳³ג‚×׳³ג€ frames ׳³ֲ©׳³ֲ 20ms: 160 ׳³ג€˜׳³ֳ—׳³ג„¢׳³ֲ ײ¾ֲ¼-law ׳³ג€˜׳³ג€÷׳³ֲ ׳³ֲ©׳³ֲ׳³ג„¢׳³ג€”׳³ג€
                     for i in range(0, len(ulaw), 160):
                         payload_b64 = base64.b64encode(ulaw[i : i + 160]).decode("ascii")
                         await ws.send_text(json.dumps({"event": "media", "media": {"payload": payload_b64}}))
 
-                    # ׳׳₪׳¡ ׳׳× ׳”׳׳׳’׳¨ ׳׳׳—׳¨ ׳©׳׳™׳—׳”
+                    # ׳³ֲ׳³ג‚×׳³ֲ¡ ׳³ֲ׳³ֳ— ׳³ג€׳³ֲ׳³ֲ׳³ג€™׳³ֲ¨ ׳³ֲ׳³ֲ׳³ג€”׳³ֲ¨ ׳³ֲ©׳³ֲ׳³ג„¢׳³ג€”׳³ג€
                     audio_out_buffer = bytearray()
 
                 elif etype in ("response.completed", "response.refusal.delta", "response.audio.completed"):
-                    # ׳¡׳™׳׳•׳ ׳§׳¦׳” ׳™׳—׳™׳“׳× ׳“׳™׳‘׳•׳¨
+                    # ׳³ֲ¡׳³ג„¢׳³ֲ׳³ג€¢׳³ֲ ׳³ֲ§׳³ֲ¦׳³ג€ ׳³ג„¢׳³ג€”׳³ג„¢׳³ג€׳³ֳ— ׳³ג€׳³ג„¢׳³ג€˜׳³ג€¢׳³ֲ¨
                     await ws.send_text(json.dumps({"event": "mark", "mark": {"name": "done"}}))
 
         except Exception as e:
             logger.exception("pump_openai_to_twilio error: %s", e)
 
     try:
-        # ׳—׳‘׳¨ ׳-OpenAI (׳¢׳ ׳˜׳™׳₪׳•׳ ׳‘׳›׳©׳ ׳›׳“׳™ ׳׳ ׳׳”׳₪׳™׳ ׳׳× ׳”-WS ׳©׳ ׳˜׳•׳•׳™׳׳™׳• ׳׳™׳“)
+        # ׳³ג€”׳³ג€˜׳³ֲ¨ ׳³ֲ-OpenAI (׳³ֲ¢׳³ֲ ׳³ֻ׳³ג„¢׳³ג‚×׳³ג€¢׳³ֲ ׳³ג€˜׳³ג€÷׳³ֲ©׳³ֲ ׳³ג€÷׳³ג€׳³ג„¢ ׳³ֲ׳³ֲ ׳³ֲ׳³ג€׳³ג‚×׳³ג„¢׳³ֲ ׳³ֲ׳³ֳ— ׳³ג€-WS ׳³ֲ©׳³ֲ ׳³ֻ׳³ג€¢׳³ג€¢׳³ג„¢׳³ֲ׳³ג„¢׳³ג€¢ ׳³ֲ׳³ג„¢׳³ג€)
         try:
             oa_ws = await openai_realtime_connect()
         except Exception as _e:
@@ -235,10 +235,10 @@ async def twilio_media(ws: WebSocket):
                 pass
             return
 
-        # ׳׳׳–׳™׳ Asynchronous ׳׳”׳׳•׳“׳ ׳׳›׳™׳•׳•׳ ׳˜׳•׳•׳׳™׳•
+        # ׳³ֲ׳³ֲ׳³ג€“׳³ג„¢׳³ֲ Asynchronous ׳³ֲ׳³ג€׳³ֲ׳³ג€¢׳³ג€׳³ֲ ׳³ֲ׳³ג€÷׳³ג„¢׳³ג€¢׳³ג€¢׳³ֲ ׳³ֻ׳³ג€¢׳³ג€¢׳³ֲ׳³ג„¢׳³ג€¢
         pump_task = asyncio.create_task(pump_openai_to_twilio())
 
-        # ׳§׳‘׳׳” ׳׳”׳˜׳׳₪׳•׳ ג†’ ׳”׳׳•׳“׳
+        # ׳³ֲ§׳³ג€˜׳³ֲ׳³ג€ ׳³ֲ׳³ג€׳³ֻ׳³ֲ׳³ג‚×׳³ג€¢׳³ֲ ׳’ג€ ג€™ ׳³ג€׳³ֲ׳³ג€¢׳³ג€׳³ֲ
         while True:
             try:
                 msg = await ws.receive_text()
@@ -260,7 +260,7 @@ async def twilio_media(ws: WebSocket):
                 logger.info(f"[Twilio] stream started sid={stream_sid}")
 
             elif t_type == "media":
-                # ׳׳“׳‘׳™׳™׳¡ 20ms ־¼-law ג†’ PCM16/8k ג†’ PCM16/16k ג†’ append ׳ײ¾Realtime
+                # ׳³ֲ׳³ג€׳³ג€˜׳³ג„¢׳³ג„¢׳³ֲ¡ 20ms ײ¾ֲ¼-law ׳’ג€ ג€™ PCM16/8k ׳’ג€ ג€™ PCM16/16k ׳’ג€ ג€™ append ׳³ֲ׳²ֲ¾Realtime
                 payload_b64 = t_evt.get("media", {}).get("payload")
                 if not payload_b64:
                     continue
@@ -275,7 +275,7 @@ async def twilio_media(ws: WebSocket):
                     }))
 
                     inbound_packets += 1
-                    # ׳׳—׳× ׳~1 ׳©׳ ׳™׳” (׳‘׳¢׳¨׳ 50 ׳₪׳¨׳™׳™׳׳™׳ ׳©׳ 20ms) ׳ ׳‘׳§׳© ׳׳”׳׳•׳“׳ ׳׳”׳’׳™׳‘
+                    # ׳³ֲ׳³ג€”׳³ֳ— ׳³ֲ~1 ׳³ֲ©׳³ֲ ׳³ג„¢׳³ג€ (׳³ג€˜׳³ֲ¢׳³ֲ¨׳³ֲ 50 ׳³ג‚×׳³ֲ¨׳³ג„¢׳³ג„¢׳³ֲ׳³ג„¢׳³ֲ ׳³ֲ©׳³ֲ 20ms) ׳³ֲ ׳³ג€˜׳³ֲ§׳³ֲ© ׳³ֲ׳³ג€׳³ֲ׳³ג€¢׳³ג€׳³ֲ ׳³ֲ׳³ג€׳³ג€™׳³ג„¢׳³ג€˜
                     if inbound_packets % 50 == 0:
                         await oa_ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
                         await oa_ws.send(json.dumps({"type": "response.create", "response": {}}))
@@ -285,7 +285,7 @@ async def twilio_media(ws: WebSocket):
 
             elif t_type == "stop":
                 logger.info("[Twilio] stream stopped by Twilio")
-                # ׳ ׳¡׳’׳•׳¨ ׳™׳₪׳”: commit ׳׳—׳¨׳•׳ ׳•׳‘׳§׳©׳× ׳×׳’׳•׳‘׳” (׳׳ ׳¦׳¨׳™׳)
+                # ׳³ֲ ׳³ֲ¡׳³ג€™׳³ג€¢׳³ֲ¨ ׳³ג„¢׳³ג‚×׳³ג€: commit ׳³ֲ׳³ג€”׳³ֲ¨׳³ג€¢׳³ֲ ׳³ג€¢׳³ג€˜׳³ֲ§׳³ֲ©׳³ֳ— ׳³ֳ—׳³ג€™׳³ג€¢׳³ג€˜׳³ג€ (׳³ֲ׳³ֲ ׳³ֲ¦׳³ֲ¨׳³ג„¢׳³ֲ)
                 try:
                     await oa_ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
                     await oa_ws.send(json.dumps({"type": "response.create", "response": {}}))
@@ -293,7 +293,7 @@ async def twilio_media(ws: WebSocket):
                     pass
                 break
 
-        # ׳¡׳’׳™׳¨׳” ׳׳¡׳•׳“׳¨׳× ׳©׳ ׳”-task (׳¨׳§ ׳׳ ׳ ׳•׳¦׳¨)
+        # ׳³ֲ¡׳³ג€™׳³ג„¢׳³ֲ¨׳³ג€ ׳³ֲ׳³ֲ¡׳³ג€¢׳³ג€׳³ֲ¨׳³ֳ— ׳³ֲ©׳³ֲ ׳³ג€-task (׳³ֲ¨׳³ֲ§ ׳³ֲ׳³ֲ ׳³ֲ ׳³ג€¢׳³ֲ¦׳³ֲ¨)
         if pump_task:
             pump_task.cancel()
             try:
