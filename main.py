@@ -3,6 +3,8 @@ from typing import Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Response, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+import ssl, urllib.parse
+from websockets.exceptions import InvalidStatusCode
 import websockets
 
 from utils_audio import ulaw_to_linear16, linear16_to_ulaw, resample_linear16
@@ -81,19 +83,37 @@ async def openai_realtime_connect():
     if not OPENAI_API_KEY:
         raise RuntimeError("OPENAI_API_KEY is not set")
 
-    uri = f"wss://api.openai.com/v1/realtime?model={REALTIME_MODEL}"
+    # מאפשר override ל-base URL (למשל דרך פרוקסי/אזור)
+    base_url = os.getenv("OPENAI_BASE_URL", "wss://api.openai.com")
+    uri = f"{base_url}/v1/realtime?model={urllib.parse.quote_plus(REALTIME_MODEL)}"
     headers = [
         ("Authorization", f"Bearer {OPENAI_API_KEY}"),
         ("OpenAI-Beta", "realtime=v1"),
     ]
 
-    ws = await websockets.connect(
-        uri,
-        extra_headers=headers,
-        ping_interval=20,
-        ping_timeout=20,
-        max_size=None,
-    )
+    ws = None
+    # ריטריי קצר כדי לא להפיל את שיחת טוויליו על כשל רגעי
+    for _attempt in range(3):
+        try:
+            ws = await websockets.connect(
+                uri,
+                extra_headers=headers,
+                ssl=ssl.create_default_context(),
+                ping_interval=20,
+                ping_timeout=20,
+                close_timeout=5,
+                max_queue=None,
+                max_size=None,
+            )
+            break
+        except InvalidStatusCode as _e:
+            logger.error("OpenAI WS handshake failed (status=%s)", getattr(_e, "status", getattr(_e, "status_code", "?")))
+        except Exception as _e:
+            logger.exception("OpenAI WS connect failed: %s", _e)
+        await asyncio.sleep(0.6)
+
+    if ws is None:
+        raise RuntimeError("Upstream connect failed")
 
     # תצורת סשן: קול, מודל, VAD בצד השרת, פורמטים של אודיו
     session_update = {
@@ -147,6 +167,7 @@ async def twilio_media(ws: WebSocket):
     logger.info(f"[WS] Twilio connected with subprotocol={chosen_sub}")
 
     oa_ws: Optional[websockets.WebSocketClientProtocol] = None
+    pump_task: Optional[asyncio.Task] = None
     audio_out_buffer = bytearray()
     inbound_packets = 0
 
@@ -202,8 +223,16 @@ async def twilio_media(ws: WebSocket):
             logger.exception("pump_openai_to_twilio error: %s", e)
 
     try:
-        # חבר ל-OpenAI
-        oa_ws = await openai_realtime_connect()
+        # חבר ל-OpenAI (עם טיפול בכשל כדי לא להפיל את ה-WS של טוויליו מיד)
+        try:
+            oa_ws = await openai_realtime_connect()
+        except Exception as _e:
+            logger.error("OpenAI connect failed; informing Twilio and closing: %s", _e)
+            try:
+                await ws.send_text(json.dumps({"event":"mark","mark":{"name":"upstream_error"}}))
+            except Exception:
+                pass
+            return
 
         # מאזין Asynchronous מהמודל לכיוון טווליו
         pump_task = asyncio.create_task(pump_openai_to_twilio())
@@ -263,12 +292,13 @@ async def twilio_media(ws: WebSocket):
                     pass
                 break
 
-        # סגירה מסודרת של ה-task
-        pump_task.cancel()
-        try:
-            await pump_task
-        except Exception:
-            pass
+        # סגירה מסודרת של ה-task (רק אם נוצר)
+        if pump_task:
+            pump_task.cancel()
+            try:
+                await pump_task
+            except Exception:
+                pass
 
     finally:
         try:
