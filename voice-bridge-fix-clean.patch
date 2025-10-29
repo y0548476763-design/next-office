@@ -1,6 +1,4 @@
---- a/main.py
-+++ b/main.py
-@@
+@@ async def twilio_media(ws: WebSocket):
 -    oa_ws: Optional[websockets.WebSocketClientProtocol] = None
 -    pump_task: Optional[asyncio.Task] = None
 -    audio_out_buffer = bytearray()
@@ -11,58 +9,42 @@
 +    inbound_packets = 0
 +    stream_sid: Optional[str] = None
 
-@@
--    async def pump_openai_to_twilio():
-+    async def pump_openai_to_twilio():
-         """
-@@
+@@ async def pump_openai_to_twilio():
 -        nonlocal audio_out_buffer
 +        nonlocal audio_out_buffer, stream_sid
-@@
--                    for i in range(0, len(ulaw), 160):
--                        payload_b64 = base64.b64encode(ulaw[i : i + 160]).decode("ascii")
--                        await ws.send_text(json.dumps({"event": "media", "media": {"payload": payload_b64}}))
-+                    for i in range(0, len(ulaw), 160):
-+                        payload_b64 = base64.b64encode(ulaw[i : i + 160]).decode("ascii")
-+                        if stream_sid:
-+                            await ws.send_text(json.dumps({
-+                                "event": "media",
-+                                "streamSid": stream_sid,
-+                                "media": {"payload": payload_b64}
-+                            }))
 
-@@
--                elif etype in ("response.completed", "response.refusal.delta", "response.audio.completed"):
--                    # סימון קצה יחידת דיבור
--                    await ws.send_text(json.dumps({"event": "mark", "mark": {"name": "done"}}))
-+                elif etype in ("response.completed", "response.refusal.delta", "response.audio.completed"):
-+                    # סימון קצה יחידת דיבור
-+                    if stream_sid:
-+                        await ws.send_text(json.dumps({"event": "mark", "streamSid": stream_sid, "mark": {"name": "done"}}))
-
-@@
--            if t_type == "start":
--                stream_sid = t_evt.get("start", {}).get("streamSid")
-+            if t_type == "start":
-+                stream_sid = t_evt.get("start", {}).get("streamSid")
-                 logger.info(f"[Twilio] stream started sid={stream_sid}")
-
-@@
--        try:
--            oa_ws = await openai_realtime_connect()
--        except Exception as _e:
-+        try:
-+            oa_ws = await openai_realtime_connect()
-+        except Exception as _e:
-             logger.error("OpenAI connect failed; informing Twilio and closing: %s", _e)
-             try:
--                await ws.send_text(json.dumps({"event":"mark","mark":{"name":"upstream_error"}}))
+@@ async def pump_openai_to_twilio():
+-                payload_b64 = base64.b64encode(ulaw[i : i + 160]).decode("ascii")
+-                await ws.send_text(json.dumps({"event": "media", "media": {"payload": payload_b64}}))
++                payload_b64 = base64.b64encode(ulaw[i : i + 160]).decode("ascii")
 +                if stream_sid:
 +                    await ws.send_text(json.dumps({
-+                        "event":"mark",
++                        "event": "media",
 +                        "streamSid": stream_sid,
-+                        "mark":{"name":"upstream_error"}
++                        "media": {"payload": payload_b64}
 +                    }))
-             except Exception:
-                 pass
-             return
+
+@@ async def pump_openai_to_twilio():
+-            await ws.send_text(json.dumps({"event": "mark", "mark": {"name": "done"}}))
++            if stream_sid:
++                await ws.send_text(json.dumps({
++                    "event": "mark",
++                    "streamSid": stream_sid,
++                    "mark": {"name": "done"}
++                }))
+
+@@ async def twilio_media(ws: WebSocket):
+-    if t_type == "start":
+-        stream_sid = t_evt.get("start", {}).get("streamSid")
++    if t_type == "start":
++        stream_sid = t_evt.get("start", {}).get("streamSid")
++        logger.info(f"[Twilio] stream started sid={stream_sid}")
+
+@@ async def twilio_media(ws: WebSocket):
+-    await ws.send_text(json.dumps({"event":"mark","mark":{"name":"upstream_error"}}))
++    if stream_sid:
++        await ws.send_text(json.dumps({
++            "event": "mark",
++            "streamSid": stream_sid,
++            "mark": {"name": "upstream_error"}
++        }))
